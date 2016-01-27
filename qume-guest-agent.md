@@ -1,13 +1,6 @@
-#vm配置
-安装好win7的vm，通过virt-manager修改vm配置，要将网卡类型、硬盘类型都改成virtio，同时修改通讯类型为unix
+#win7 vm配置
+安装好win7的vm，通过virt-manager修改vm配置，修改channel为unix,相关的path、name要设置好。
 ```
-...
-<target dev='vda' bus='virtio'/>
-...
-    <interface type='network'>
-      <mac address='52:54:00:c9:62:8b'/>
-      <source network='default'/>
-      <model type='virtio'/>
 ...
     <channel type='unix'>
       <source mode='bind' path='/var/lib/libvirt/qemu/test.org.qemu.ga.0'/>
@@ -16,7 +9,7 @@
     </channel>
 ```
 #qemu-guest-agent安装配置流程
-##vm安装virtio驱动
+##win7 vm安装virtio驱动
 下载virtio驱动
 ```
 wget https://fedorapeople.org/groups/virt/virtio-win/virtio-win.repo -O /etc/yum.repos.d/virtio-win.repo
@@ -32,16 +25,7 @@ copy D:\mingw-w64\mingw-w64\x86_64-4.9.2-posix-seh-rt_v3-rev1\mingw64\x86_64-w64
 ```
 csdn下载intl.dll
 http://download.csdn.net/download/ftdy1/4358253
-复制到以下文件夹中
-```
-C:\Program Files\qemu-ga 
-C:\windows\System32 
-C:\windows\SysWOW64
-```
-分别用管理员权限运行命令行
-```
-regsrv32 intl.dll
-```
+复制到C:\Program Files\qemu-ga
 #验证
 win7 vm命令行中运行
 ```

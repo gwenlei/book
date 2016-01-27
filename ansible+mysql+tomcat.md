@@ -166,6 +166,8 @@ File roles/tomcat/tasks/main.yml主要执行流程。
 ```text
   - name: clean existing website content
     shell: rm -rf {{webapp}}/test11 && rm -f {{webapp}}/test11.war 
+  - name: ensure tomcat6 is running
+    service: name=tomcat6 state=started
   - name: copy webapp
     copy: src=HelloTomcat/test11.war dest={{webapp}}/ owner=tomcat group=tomcat
   - name: sleep for 5 seconds
