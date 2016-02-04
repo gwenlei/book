@@ -27,7 +27,7 @@ csdn下载intl.dll
 http://download.csdn.net/download/ftdy1/4358253
 复制到C:\Program Files\qemu-ga
 #验证
-win7 vm命令行中运行
+win7 vm命令行中运行，要用管理员权限运行。
 ```
 qemu-ga -p \\.\Global\org.qemu.ga.0
 ```
