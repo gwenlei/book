@@ -15,7 +15,7 @@
 wget https://fedorapeople.org/groups/virt/virtio-win/virtio-win.repo -O /etc/yum.repos.d/virtio-win.repo
 yum install virtio-win
 ```
-将稳定版/usr/share/virtio-win/virtio-win-0.1.102.iso以cdrom形式加载到vm中，在vm的设备管理器中更新其他通讯设置里有问号的设备驱动
+将稳定版/usr/share/virtio-win/virtio-win-0.1.102.iso以cdrom形式加载到vm中，在vm的设备管理器中更新其他通讯设置里有问号的设备驱动(只能手动更新设备管理器里有问号的设备驱动)
 virtio-win-0.1.102.iso目录guest-agent中双击安装qume-ga.msi
 从西西软件园下载mingw-w64.zip，解压到D:\
 http://www.cr173.com/soft/132367.html
@@ -40,3 +40,23 @@ host收到返回信息
 ```
 {"return": {"version": "0.12.1", "supported_commands": [{"enabled": true, "name": "guest-set-vcpus"}, {"enabled": true, "name": "guest-get-vcpus"}, {"enabled": true, "name": "guest-network-get-interfaces"}, {"enabled": true, "name": "guest-suspend-hybrid"}, {"enabled": true, "name": "guest-suspend-ram"}, {"enabled": true, "name": "guest-suspend-disk"}, {"enabled": true, "name": "guest-fstrim"}, {"enabled": true, "name": "guest-fsfreeze-thaw"}, {"enabled": true, "name": "guest-fsfreeze-freeze"}, {"enabled": true, "name": "guest-fsfreeze-status"}, {"enabled": true, "name": "guest-file-flush"}, {"enabled": true, "name": "guest-file-seek"}, {"enabled": true, "name": "guest-file-write"}, {"enabled": true, "name": "guest-file-read"}, {"enabled": true, "name": "guest-file-close"}, {"enabled": true, "name": "guest-file-open"}, {"enabled": true, "name": "guest-shutdown"}, {"enabled": true, "name": "guest-info"}, {"enabled": true, "name": "guest-set-time"}, {"enabled": true, "name": "guest-get-time"}, {"enabled": true, "name": "guest-ping"}, {"enabled": true, "name": "guest-sync"}, {"enabled": true, "name": "guest-sync-delimited"}]}}
 ```
+#centos安装qemu-guest-agent
+```
+yum install qemu-guest-agent
+```
+安装完软件不用设置自动启动，libvirt自动连接。
+#ubuntu安装qemu-guest-agent
+```
+sudo apt-get install qemu-guest-agent
+```
+安装完软件不用设置自动启动，libvirt自动连接。
+#opensuse安装qemu-guest-agent
+http://pkgs.org/download/qemu-guest-agent下载rpm包
+设置开机启动
+```
+cd /root
+wget -c http://192.168.0.82/qemu-guest-agent-2.1.3-7.2.x86_64.rpm
+rpm -ivh /root/qemu-guest-agent-2.1.3-7.2.x86_64.rpm
+echo "qemu-ga -v -p /dev/virtio-ports/org.qemu.guest_agent.0" >> /etc/init.d/after.local
+```
+
