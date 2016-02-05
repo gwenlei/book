@@ -45,7 +45,7 @@ host收到返回信息
 yum install qemu-guest-agent
 ```
 安装完软件不用设置自动启动，libvirt自动连接。
-#ubuntu安装qemu-guest-agent
+#ubuntu14.04安装qemu-guest-agent，ubuntu12.04没有对应的安装包。
 ```
 sudo apt-get install qemu-guest-agent
 ```
@@ -58,5 +58,17 @@ cd /root
 wget -c http://192.168.0.82/qemu-guest-agent-2.1.3-7.2.x86_64.rpm
 rpm -ivh /root/qemu-guest-agent-2.1.3-7.2.x86_64.rpm
 echo "qemu-ga -v -p /dev/virtio-ports/org.qemu.guest_agent.0" >> /etc/init.d/after.local
+```
+#默认设置和验证方法
+虚拟机添加设备。
+```
+     <channel type='unix'>
+       <source mode='bind' path='/var/lib/libvirt/qemu/test7.agent'/>
+        <target type='virtio' name='org.qemu.guest_agent.0'/>
+     </channel>
+```
+虚拟机启动后在命令行运行命令，能成功重启的即安装完成。
+```
+virsh reboot --mode agent XXX
 ```
 

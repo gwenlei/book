@@ -1,8 +1,6 @@
-#win7\win2008r2
+#win7\win2008r2(win8\win2012以上都是powershell3.0不需要升级，只要设置winrm)
 ##升级networkframe4.6
-```
-NDP46-KB3045557-x86-x64-AllOS-ENU.exe
-```
+双击安装NDP46-KB3045557-x86-x64-AllOS-ENU.exe
 ##升级powershell3.0
 powershell设置脚本执行权限
 ```
