@@ -80,3 +80,34 @@ cloudstack-setup-databases cloud:engine@127.0.0.1 --deploy-as=root:engine
 cloudstack-setup-management
 service cloudstack-management restart
 ```
+xenserver分vlan不能连接，暂不知原因。
+改成不用vlan的二级存储。
+  553  ifconfig eth3.100 10.10.100.11/24
+  554  ifconfig eth3.101 10.10.101.11/24
+  519  vconfig add eth3 100
+  520  vconfig add eth3 101
+  516  modprobe 8021q
+
+they are not HVM enabled
+update cloud.vm_template set hvm=0 where name='c66';
+
+##下载模版时要设置文件可读权限，不要勾选hvm
+
+yum -y install mariadb*  
+systemctl start mariadb.service
+systemctl enable mariadb.service
+mysql_secure_installation
+mysql -u root -p  (enter password when prompted)
+mysql> GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+mysql> quit
+cloudstack-setup-databases cloud:engine@127.0.0.1 --deploy-as=root:engine
+cloudstack-setup-management
+
+cd /usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/
+wget http://download.cloud.com.s3.amazonaws.com/tools/vhd-util
+chmod 755 /usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util
+
+/usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /exports/secondary -u http://192.168.56.11/systemvm64template-4.5-xen.vhd.bz2 -h xenserver -F
+
+数据库出错修复
+/usr/bin/myisamchk -c -r /var/lib/mysql/mysql/proc.MYI
