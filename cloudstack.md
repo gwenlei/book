@@ -80,6 +80,20 @@ cloudstack-setup-databases cloud:engine@127.0.0.1 --deploy-as=root:engine
 cloudstack-setup-management
 service cloudstack-management restart
 ```
+nfs添加参数
+```
+MOUNTD_NFS_V3="yes"
+RQUOTAD_PORT=875
+MOUNTD_PORT=892
+STATD_PORT=662
+STATD_OUTGOING_PORT=2020
+
+
+LOCKD_TCPPORT=32803
+LOCKD_UDPPORT=32769
+```
+
+
 xenserver分vlan不能连接，暂不知原因。
 改成不用vlan的二级存储。
   553  ifconfig eth3.100 10.10.100.11/24
@@ -111,3 +125,7 @@ chmod 755 /usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util
 
 数据库出错修复
 /usr/bin/myisamchk -c -r /var/lib/mysql/mysql/proc.MYI
+
+nfs,nginx自动启动
+systemctl enable nfs-server.service
+systemctl enable nginx
