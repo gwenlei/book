@@ -1,0 +1,163 @@
+#以ubuntu 14.04的镜像创建磁盘空间
+```
+qemu-img create -f qcow2 -b /home/leishuangjuan/UbuntuBaseCentOS.qcow2 leivmbuild.qcow2
+```
+#在virt-manager选择import existing disk image的方式创建虚拟机，虚拟机名称leivmbuild,指定CPU 6－7，SandyBridge,内存4G 
+新建期间leivmbuild.qcow2出现权限问题，不可读解决办法是：
+```
+#umount /home/leishuangjuan/.gvfs
+#find . -inum 554009 -exec rm{} \;
+#rm -rf .gvfs
+```
+#virsh edit leivmbuild 增加vmx特性
+```
+<cpu mode='custom' match='exact'> 
+    <model fallback='allow'>SandyBridge</model> 
+    <vendor>Intel</vendor> 
+    <feature policy='require' name='vme'/> 
+    <feature policy='require' name='dtes64'/> 
+    <feature policy='require' name='vmx'/> 
+    <feature policy='require' name='erms'/> 
+    <feature policy='require' name='xtpr'/> 
+    <feature policy='require' name='smep'/> 
+    <feature policy='require' name='pcid'/> 
+    <feature policy='require' name='est'/> 
+    <feature policy='require' name='monitor'/> 
+    <feature policy='require' name='smx'/> 
+    <feature policy='require' name='tm'/> 
+    <feature policy='require' name='acpi'/> 
+    <feature policy='require' name='osxsave'/> 
+    <feature policy='require' name='ht'/> 
+    <feature policy='require' name='pdcm'/> 
+    <feature policy='require' name='fsgsbase'/> 
+    <feature policy='require' name='f16c'/> 
+    <feature policy='require' name='ds'/> 
+    <feature policy='require' name='tm2'/> 
+    <feature policy='require' name='ss'/> 
+    <feature policy='require' name='pbe'/> 
+    <feature policy='require' name='ds_cpl'/> 
+    <feature policy='require' name='rdrand'/> 
+  </cpu> 
+```
+#修改更新源，修改/etc/apt/apt.conf 
+```
+apt-get update 
+```
+#安装kvm和vmbuilder 
+```
+apt-get install ubuntu-virt-server python-vm-builder kvm-ipxe 
+```
+#修改用户组 
+```
+adduser `id -un` libvirtd 
+adduser `id -un` kvm 
+# 你需要退出，重新登录，那样新的群组成员资格才生效。
+```
+#测试连接libvirtd 
+```
+virsh -c qemu:///system list
+```
+#配置网桥
+```
+apt-get install bridge-utils
+```
+配置网桥:/etc/network/interfaces
+```
+auto lo 
+iface lo inet loopback 
+
+# The primary network interface 
+auto eth0 
+iface eth0 inet manual 
+
+auto br0 
+iface br0 inet static 
+address 10.88.88.10 
+network 10.88.88.0 
+netmask 255.255.255.0 
+broadcast 10.88.88.255 
+gateway 10.88.88.1 
+dns-nameservers 114.114.114.114 
+bridge_ports eth0 
+bridge_fd 9 
+bridge_hello 2 
+bridge_maxage 12 
+bridge_stp off 
+```
+重启动网络
+```
+service networking restart 
+ifdown -a && ifup -a
+ifconfig检查网络配置 
+reboot主机
+```
+#vmbuilder创建虚拟机
+```
+mkdir -p /var/lib/libvirt/images/vm1
+mkdir -p /var/lib/libvirt/images/vm2
+mkdir -p /var/lib/libvirt/images/vm3
+mkdir -p /var/lib/libvirt/images/vm1/mytemplates/libvirt 
+cp /etc/vmbuilder/libvirt/* /var/lib/libvirt/images/vm1/mytemplates/libvirt/
+```
+定义分区
+```
+cd /var/lib/libvirt/images/vm1/ 
+cat > vmbuilder.partition <<EOF 
+# 定义所需的分区，如下所示： 
+boot 200
+root 8000 
+swap 4000 
+--- 
+/var 20000 
+EOF
+```
+boot.sh
+```
+cd /var/lib/libvirt/images/vm1/ 
+cat > boot.sh <<EOF 
+#!/bin/sh 
+# 虚拟机第一次启动时，该脚本将运行。 
+# 它以根用户来运行。 
+# 到期终止用户帐户 
+passwd -e administrator 
+# 安装openssh-server 
+apt-get update 
+apt-get install -qqy --force-yes openssh-server 
+EOF
+```
+建第一个虚拟机vm1 ，整个运行时间大概半个小时，跟网速有关。
+mirror=http://de.archive.ubuntu.com/ubuntu外国源速度太慢
+mirror=http://192.168.0.79/ubuntu 不稳定
+mirror=http://mirrors.163.com/ubuntu 速度较快
+suite=trusty ubuntu14.04代号
+addpkg=linux-image-generic 这个包是解决This kernel does not support a non-PAE CPU.
+```
+root@ubuntu:/var/lib/libvirt/images/vm2# vmbuilder kvm ubuntu --suite=trusty --flavour=virtual --arch=amd64 \ 
+--mirror=http://mirrors.163.com/ubuntu -o --libvirt=qemu:///system \ 
+--ip=10.88.88.12 --gw=10.88.88.1 --part=vmbuilder.partition --templates=mytemplates \ 
+--user=clouder --name=clouder --pass=engine \ 
+--addpkg=linux-image-generic --addpkg=vim-nox --addpkg=unattended-upgrades --addpkg=acpid \ 
+--firstboot=/var/lib/libvirt/images/vm1/boot.sh \ 
+--mem=256 --hostname=vm2 --bridge=br0
+```
+在/etc/libvirt/qemu/ (=> /etc/libvirt/qemu/vm1.xml)中找到该虚拟机的XML配置文件。
+磁盘镜像位于我们虚拟机目录的/var/lib/libvirt/images/vm1/ubuntu-kvm/子目录中。
+启动虚拟机，登陆，第一次要修改密码，然后用新密码重新登陆
+```
+virsh start vm2
+ssh clouder@10.88.88.12
+engine!@#
+```
+iso安装命令，也要联网更新
+```
+root@ubuntu:/var/lib/libvirt/images/vm4# vmbuilder kvm ubuntu --suite=precise --flavour=virtual --arch=amd64 \ 
+--iso /root/ubuntu-12.04.3-server-amd64.iso \ 
+--mirror=http://mirrors.163.com/ubuntu --libvirt=qemu:///system \ 
+--ip=10.88.88.14 --gw=10.88.88.1 --part=vmbuilder.partition --templates=mytemplates \ 
+--user=clouder --name=clouder --pass=engine \ 
+--addpkg=linux-image-generic --addpkg=vim-nox --addpkg=unattended-upgrades --addpkg=acpid \ 
+--firstboot=/var/lib/libvirt/images/vm4/boot.sh \ 
+--mem=256 --hostname=vm4 --bridge=br0
+```
+镜像目录只能在/var/lib/libvirt/images，其他目录访问受限，虚拟机不能启动。
+可以同时执行多个创建命令，但要在不同目录中，并行进行。
