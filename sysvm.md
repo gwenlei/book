@@ -149,3 +149,28 @@ sh build.sh systemvm64template
 
 ## Enhancement
 最终镜像在/sysvm/apache-cloudstack-4.5.1-src/tools/appliance/dist
+
+
+注意事项：
+cp /usr/share/virtualbox/VBoxGuestAdditions.iso /home/sysvm/apache-cloudstack-4.5.1-src/tools/appliance/iso/VBoxGuestAdditions_5.0.14.iso
+
+windows密码重置修改脚本
+/home/sysvm/apache-cloudstack-4.5.1-src/systemvm/patches/debian/config/opt/cloud/bin/passwd_server_ip.py
+120         elif requestType == 'saved_password':
+121             #removePassword(clientAddress)
+122             savePasswordFile()
+
+登录vr
+ssh -i ~/.ssh/id_rsa.cloud -p3922 169.254.2.5
+vi /opt/cloud/bin/passwd_server_ip.py
+
+vboxmanage internalcommands converttoraw -format vdi /home/img/systemvm64template/systemvm64template1.vdi raw.img
+qemu-img convert -o compat=0.10 -f raw -c -O qcow2 raw.img systemvm64template-unknown-kvm.qcow2
+bzip2 systemvm64template-unknown-kvm.qcow2
+
+mount -o loop systemvm.iso /mnt/test
+mkdir /home/systemvmiso
+cp /mnt/test/* /home/systemvmiso
+mkisofs -o systemvm.iso /home/systemvmiso/*
+scp systemvm.iso root@10.1.6.30:/usr/share/cloudstack-common/vms
+scp systemvm.iso root@10.1.6.20:/usr/share/cloudstack-common/vms
