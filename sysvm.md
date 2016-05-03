@@ -151,26 +151,44 @@ sh build.sh systemvm64template
 最终镜像在/sysvm/apache-cloudstack-4.5.1-src/tools/appliance/dist
 
 
-注意事项：
+##注意事项：
+virtualbox版本相关的iso先拷贝到相关目录，可以避免重复下载。
 cp /usr/share/virtualbox/VBoxGuestAdditions.iso /home/sysvm/apache-cloudstack-4.5.1-src/tools/appliance/iso/VBoxGuestAdditions_5.0.14.iso
 
-windows密码重置修改脚本
-/home/sysvm/apache-cloudstack-4.5.1-src/systemvm/patches/debian/config/opt/cloud/bin/passwd_server_ip.py
-120         elif requestType == 'saved_password':
-121             #removePassword(clientAddress)
-122             savePasswordFile()
-
-登录vr
-ssh -i ~/.ssh/id_rsa.cloud -p3922 169.254.2.5
-vi /opt/cloud/bin/passwd_server_ip.py
-
+##最后的格式转换命令跟新版的virtualbox不一样，要手工转换。
 vboxmanage internalcommands converttoraw -format vdi /home/img/systemvm64template/systemvm64template1.vdi raw.img
 qemu-img convert -o compat=0.10 -f raw -c -O qcow2 raw.img systemvm64template-unknown-kvm.qcow2
 bzip2 systemvm64template-unknown-kvm.qcow2
 
+##windows密码重置修改脚本
+只要更新cloudstack-agent的/usr/share/cloudstack-common/vms/systemvm.iso,不需要更新模版。
+需要修改的文件/home/sysvm/apache-cloudstack-4.5.1-src/systemvm/patches/debian/config/opt/cloud/bin/passwd_server_ip.py
+```
+120         elif requestType == 'saved_password':
+121             #removePassword(clientAddress)
+122             savePasswordFile()
+```
+重新制作systemvm.iso
+将cloudstack-agent的/usr/share/cloudstack-common/vms/systemvm.iso下载到本地，挂载到某空目录，修改相关脚本后，重新制成iso,放回cloudstack-agent重新启动，systemvms全部destroy，重启cloudstack-agent即可。
+```
 mount -o loop systemvm.iso /mnt/test
 mkdir /home/systemvmiso
 cp /mnt/test/* /home/systemvmiso
+mkdir /home/systemvmscript
+cp /mnt/test/cloud-scripts.tgz /home/systemvmscript
+cd /home/systemvmscript
+tar xvf cloud-scripts.tgz
+sed -i "s/removePassword(clientAddress)/#removePassword(clientAddress)/g" /home/systemvmscript/opt/cloud/bin/passwd_server_ip.py
+tar cvf cloud-scripts.tar *
+gzip -c cloud-scripts.tar > cloud-scripts.tgz
+mv -f cloud-scripts.tgz /home/systemvmiso/
 mkisofs -o systemvm.iso /home/systemvmiso/*
 scp systemvm.iso root@10.1.6.30:/usr/share/cloudstack-common/vms
 scp systemvm.iso root@10.1.6.20:/usr/share/cloudstack-common/vms
+```
+登录vr，检查文件是否已经改变。
+```
+ssh -i ~/.ssh/id_rsa.cloud -p3922 169.254.2.5
+vi /opt/cloud/bin/passwd_server_ip.py
+```
+
