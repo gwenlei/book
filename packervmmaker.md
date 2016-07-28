@@ -104,3 +104,15 @@ CloudInstanceManager.msi
 cloud-set-guest-password
 cloud-set-guest-password-centos
 cloud-set-guest-password-ubuntu
+
+
+newpacker
+/root/.packer.d/plugins
+new qemu
+git clone https://github.com/qemu/qemu.git
+git submodule update --init dtc
+mkdir build
+cd build
+../configure
+make
+make stall
