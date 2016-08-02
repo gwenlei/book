@@ -1,4 +1,4 @@
-windows2008r2 enterprise
+###windows2008r2 enterprise
 1.服务器管理器－－配置---本地用户和组---用户---administrator，打开属性，对“密码永不过期”
 2.“本地组策略编辑器”后选择“Windows设置”下的“安全设置”→“账户策略”→“密码策略”点击关闭密码必须符合复杂性要求（配置成启用即可）
 3.不自动登录
@@ -16,3 +16,11 @@ web服务器iis
 控制面板，用户账户，修改用户密码
 7.安装CloudInstanceManager.msi
 下载地址 http://tenet.dl.sourceforge.net/project/cloudstack/Password%20Management%20Scripts/CloudInstanceManager.msi 
+
+###vr重置密码日志
+密码复杂度要保持，否则会重置成空白
+vr
+/var/log/messages
+里要出现password sent to 10.1.1.37 才重置密码成功，windows2008登录框出现时才出现这句日志
+密码保存文件
+/var/cache/cloud/passwords-10.1.1.1

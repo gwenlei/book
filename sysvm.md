@@ -191,4 +191,8 @@ scp systemvm.iso root@10.1.6.20:/usr/share/cloudstack-common/vms
 ssh -i ~/.ssh/id_rsa.cloud -p3922 169.254.2.5
 vi /opt/cloud/bin/passwd_server_ip.py
 ```
+安装faketime
+```
+yum install -y libfaketime
+```
 
