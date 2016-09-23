@@ -106,6 +106,7 @@ http://greg.porter.name/wiki/HowTo:XenServer#Add_a_new_storage_repository_on_loc
 http://www.linuxidc.com/Linux/2013-11/92282.htm
 
 首先要确定xenserver里有设置本地存储，cloudstack创建zone的时候勾选Enable local storage for user vms和Enable local storage for system vms，后面就不用配置主存，自动识别本地存储。
+要加上工具 chmod 755 /usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util
 
  cat /proc/partitions
 ll /dev/disk/by-id
