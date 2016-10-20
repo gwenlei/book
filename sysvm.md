@@ -197,6 +197,7 @@ yum install -y libfaketime
 ```
 
 ### VR热备会造成eth0有两个IP，同时产生两个密码进程，竞争侦听8080端口导致报文丢失。(杀掉非网关进程，只保留一个)
+### vr 服务类型勾选sourcenat 选择redundancy 热备每个网络会产生两个vr
  nohup bash /opt/cloud/bin/vpc_passwd_server $ip >/dev/null 2>&1 &
  python /opt/cloud/bin/passwd_server_ip.py $addr >/dev/null 2>/dev/null
   python /opt/cloud/bin/passwd_server_ip.py $ip >/dev/null 2>/dev/null
