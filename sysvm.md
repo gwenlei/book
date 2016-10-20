@@ -196,3 +196,20 @@ vi /opt/cloud/bin/passwd_server_ip.py
 yum install -y libfaketime
 ```
 
+
+ nohup bash /opt/cloud/bin/vpc_passwd_server $ip >/dev/null 2>&1 &
+ python /opt/cloud/bin/passwd_server_ip.py $addr >/dev/null 2>/dev/null
+  python /opt/cloud/bin/passwd_server_ip.py $ip >/dev/null 2>/dev/null
+systemvm/patches/debian/config/opt/cloud/bin/vpc_guestnw.sh
+core/src/com/cloud/agent/resource/virtualnetwork/VRScripts.java
+/etc/init.d/cloud-early-config {start|stop}
+service cloud-passwd-srvr start
+
+
+root@r-4-VM:~# ps -ef|grep python
+root      2391  2388  0 03:53 ?        00:00:00 python /opt/cloud/bin/passwd_server_ip.py 10.0.1.1
+root      3592     1  0 03:54 ?        00:00:00 python /opt/cloud/bin/baremetal-vr.py
+root      3611  3592  0 03:54 ?        00:00:00 /usr/bin/python /opt/cloud/bin/baremetal-vr.py
+
+systemvm/patches/debian/config/opt/cloud/bin/patchsystemvm.sh:   echo "cloud cloud-passwd-srvr apache2 nfs-common portmap keepalived conntrackd" > /var/cache/cloud/disabled_svcs
+
