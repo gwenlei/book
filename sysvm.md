@@ -196,15 +196,20 @@ vi /opt/cloud/bin/passwd_server_ip.py
 yum install -y libfaketime
 ```
 
-
+### VR热备会造成eth0有两个IP，同时产生两个密码进程，竞争侦听8080端口导致报文丢失。(杀掉非网关进程，只保留一个)
  nohup bash /opt/cloud/bin/vpc_passwd_server $ip >/dev/null 2>&1 &
  python /opt/cloud/bin/passwd_server_ip.py $addr >/dev/null 2>/dev/null
   python /opt/cloud/bin/passwd_server_ip.py $ip >/dev/null 2>/dev/null
 systemvm/patches/debian/config/opt/cloud/bin/vpc_guestnw.sh
 core/src/com/cloud/agent/resource/virtualnetwork/VRScripts.java
+systemvm/patches/debian/config/opt/cloud/bin/vpc_passwd_server
 /etc/init.d/cloud-early-config {start|stop}
 service cloud-passwd-srvr start
 
+日志文件
+/var/log/messages : password
+密码文件
+/var/cache/cloud/password*
 
 root@r-4-VM:~# ps -ef|grep python
 root      2391  2388  0 03:53 ?        00:00:00 python /opt/cloud/bin/passwd_server_ip.py 10.0.1.1
