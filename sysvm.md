@@ -219,3 +219,6 @@ root      3611  3592  0 03:54 ?        00:00:00 /usr/bin/python /opt/cloud/bin/b
 
 systemvm/patches/debian/config/opt/cloud/bin/patchsystemvm.sh:   echo "cloud cloud-passwd-srvr apache2 nfs-common portmap keepalived conntrackd" > /var/cache/cloud/disabled_svcs
 
+
+cp /usr/share/virtualbox/VBoxGuestAdditions.iso /home/sysvm/apache-cloudstack-4.5.1-src/tools/appliance/iso/VBoxGuestAdditions_5.1.4.iso
+

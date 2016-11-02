@@ -74,6 +74,10 @@ cp /home/html/downloads/CentOS7-2\(1\).vhd   /home/html/downloads/c646e6b8-5b3c-
 cp /home/img/centos72docker.vhd  /home/html/downloads/c646e6b8-5b3c-6fc7-8aee-d787041b8d9f/1c7004a1-fbc4-4871-9c23-b312994f8994.vhd
 cp /home/tmp/Centos64_aug19.vhd  /home/html/downloads/c646e6b8-5b3c-6fc7-8aee-d787041b8d9f/1c7004a1-fbc4-4871-9c23-b312994f8996.vhd
 
+cp /home/CleanBuildXenServer/box/vhd/centos72-nocm-2.0.15  /home/html/downloads/c646e6b8-5b3c-6fc7-8aee-d787041b8d9f/1c7004a1-fbc4-4871-9c23-b312994f8997.vhd
+
+cp /home/CleanBuildXenServer/box/vhd/centos72-nocm-2.0.15  /home/html/downloads/eef391d2-e726-fc28-fe1f-98f4d88be76d/1c7004a1-fbc4-4871-9c23-b312994f8998.vhd
+
 qemu-img create -f qcow2 /home/img/centos72docker.qcow2 -b /home/code/mycode/go/src/main/static/result/20161031160006/output/CentOS7-2
 qemu-img convert -O vpc /home/img/centos72docker.qcow2 /home/img/centos72docker.vhd
 
@@ -141,6 +145,16 @@ cstemplate register centos72docker http://192.168.0.82/downloads/CentOS7-2.vhd -
 vim /etc/ssh/sshd_config
 UseDNS no
 service sshd restart
+
+xenserver虚拟机网络设置
+ip address add 192.168.10.124/16 dev eth0
+ ip route add default via  192.168.0.176  dev eth0
+ip route del default 
+
+vi /etc/resolv.conf
+search localdomain
+nameserver 223.5.5.5
+nameserver 180.76.76.76
 
 
 windows2008r2用virtualbox来做镜像再转vhd
