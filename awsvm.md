@@ -196,8 +196,9 @@ xe network-list
 xe vif-create vm-uuid=69c2177e-1b19-3445-c60a-a4af8b9933d9 network-uuid=9a5b1964-055e-060f-d47d-2f173b7eb314 mac=random device=0
 xe vm-disk-list uuid=69c2177e-1b19-3445-c60a-a4af8b9933d9
 xe vm-disk-remove device=0 uuid=69c2177e-1b19-3445-c60a-a4af8b9933d9
-xe vbd-create vm-uuid=69c2177e-1b19-3445-c60a-a4af8b9933d9 vdi-uuid=1c7004a1-fbc4-4871-9c23-b312994f899b device=0 bootable=true
-xe vm-memory-limits-set uuid=69c2177e-1b19-3445-c60a-a4af8b9933d9 dynamic-min=1GiB dynamic-max=1GiB static-min=1GiB static-max=1GiB
+xe vbd-create vm-uuid=69c2177e-1b19-3445-c60a-a4af8b9933d9 vdi-uuid=1c7004a1-fbc4-4871-9c23-b312994f899b device=0 bootable=true unpluggable=true
+xe vm-memory-limits-set uuid=69c2177e-1b19-3445-c60a-a4af8b9933d9 dynamic-min=512MiB dynamic-max=512MiB static-min=512MiB static-max=512MiB
+xe vm-param-set uuid=69c2177e-1b19-3445-c60a-a4af8b9933d9 other-config:auto_poweron=true
 xe vm-start uuid=69c2177e-1b19-3445-c60a-a4af8b9933d9
 
 xe vm-disk-add uuid=69c2177e-1b19-3445-c60a-a4af8b9933d9 sr-uuid=2d094569-eb38-03cb-3725-52fb42513519 device=0 disk-size=2GiB
