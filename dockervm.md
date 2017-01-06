@@ -77,6 +77,31 @@ cp /home/tmp/Centos64_aug19.vhd  /home/html/downloads/c646e6b8-5b3c-6fc7-8aee-d7
 cp /home/CleanBuildXenServer/box/vhd/centos72-nocm-2.0.15  /home/html/downloads/c646e6b8-5b3c-6fc7-8aee-d787041b8d9f/1c7004a1-fbc4-4871-9c23-b312994f8997.vhd
 
 cp /home/CleanBuildXenServer/box/vhd/centos72-nocm-2.0.15  /home/html/downloads/eef391d2-e726-fc28-fe1f-98f4d88be76d/1c7004a1-fbc4-4871-9c23-b312994f8998.vhd
+cp /home/img/dockervm/centos72docker.vhd  /home/html/downloads/eef391d2-e726-fc28-fe1f-98f4d88be76d/1c7004a1-fbc4-4871-9c23-b312994f8999.vhd
+cp /home/html/downloads/eef391d2-e726-fc28-fe1f-98f4d88be76d/1c7004a1-fbc4-4871-9c23-b312994f8999.vhd /home/img/dockervm/centos72docker-1104.vhd
+cp /home/html/downloads/eef391d2-e726-fc28-fe1f-98f4d88be76d/611bb242-952e-4b17-828c-7503d493bd24.vhd /home/img/dockervm/centos72docker-1104w.vhd
+cp /home/html/downloads/eef391d2-e726-fc28-fe1f-98f4d88be76d/611bb242-952e-4b17-828c-7503d493bd24.vhd /home/img/dockervm/centos72docker-1111.vhd
+
+scp /home/html/downloads/eef391d2-e726-fc28-fe1f-98f4d88be76d/611bb242-952e-4b17-828c-7503d493bd24.vhd root@192.168.0.169:/home/clouder/img/vhd/6343a8bd-f779-5ca5-4063-c2a022bb7331
+scp root@192.168.0.169:/home/clouder/img/vhd/6343a8bd-f779-5ca5-4063-c2a022bb7331/611bb242-952e-4b17-828c-7503d493bd24.vhd /home/img/dockervm/centos72docker-1221.vhd
+
+host=$(xe vm-list params=resident-on name-label=${vm} | grep resident-on | awk '{print $NF}')
+dom=$(xe vm-list params=dom-id name-label=${vm} | grep dom-id | awk '{print $NF}')
+port=$(xenstore-read /local/domain/${dom}/console/vnc-port)
+ip=$(xe pif-list management=true params=IP host-uuid=${host} | awk '{print $NF}')
+ 
+echo "run this on laptop and connect via vnc to localhost:${port}"
+echo "--> ssh -L ${port}:localhost:${port} root@${ip}"
+
+vhd直接转换成qcow2
+qemu-img convert -O qcow2 /home/img/dockervm/centos72docker-1111.vhd /home/img/dockervm/centos72docker-1111.qcow2
+用virt-manager启动修改启动文件
+sed -i "s/vmlinuz.*/& net.ifnames=0/g" /boot/grub2/grub.cfg
+
+cd /home/code/cstemplate-0.1/src/main  
+./cstemplate -i cstemplate.ini register centos72docker http://192.168.0.82/dockervm/centos72docker-1104.vhd
+Password of new VM centos72dockervm is  rE3uaw
+go run cstemplate.go -i cstemplate.ini register centos72base http://192.168.0.82/dockervm/centos72base210.vhd
 
 qemu-img create -f qcow2 /home/img/centos72docker.qcow2 -b /home/code/mycode/go/src/main/static/result/20161031160006/output/CentOS7-2
 qemu-img convert -O vpc /home/img/centos72docker.qcow2 /home/img/centos72docker.vhd
@@ -148,8 +173,15 @@ service sshd restart
 
 xenserver虚拟机网络设置
 ip address add 192.168.10.124/16 dev eth0
- ip route add default via  192.168.0.176  dev eth0
-ip route del default 
+ip route add default via  192.168.0.176  dev eth0
+ip route del default
+route add default gw 192.168.0.176
+ifconfig eth0 up 
+vi /etc/sysconfig/network-scripts/ifcfg-eth0
+ONBOOT=yes
+
+route add -net 172.16.0.0 netmask 255.255.0.0 gw 192.168.0.200
+route add -net 172.16.0.0/16 gw 192.168.0.200
 
 vi /etc/resolv.conf
 search localdomain
@@ -157,8 +189,20 @@ nameserver 223.5.5.5
 nameserver 180.76.76.76
 
 
+
+docker pull docker.io/registry
+
+systemctl list-unit-files
+
+只能用手工制作镜像，packer制作的centos72 vhd不能启动
 windows2008r2用virtualbox来做镜像再转vhd
 其他系统要用qemu来做镜像再转vhd
+
+
+ubuntu16.04 install docker-engine 1.12.0 experimental
+### 1.12.0~rc2? 
+curl -sSL http://acs-public-mirror.oss-cn-hangzhou.aliyuncs.com/docker-engine/experimental/internet | sh
+
 
 
 https://wiki.centos.org/HowTos/Xen/InstallingCentOSDomU
@@ -185,3 +229,18 @@ logvol swap --fstype swap --name=LogVol01 --vgname=VolGroup00 --size=256 --grow 
 
 %packages
 @core
+
+##查询xenserver虚机IP
+ssh root@192.168.0.169
+virsh start xenserver65
+virsh net-dhcp-leases default
+##登陆xenserver启动dockervm,查询终端号
+ssh root@192.168.122.161
+xe vm-start uuid=41b606b0-63e4-65ff-c2a2-5f6277e83b8b
+xe vm-list uuid=41b606b0-63e4-65ff-c2a2-5f6277e83b8b params=all
+xenstore-read /local/domain/1/console/vnc-port
+##设置ssh转发端口
+ssh -L 5902:localhost:5902 root@192.168.122.161
+##vnc打开终端
+ssh root@192.168.0.169 -X
+vncviewer localhost:5902
