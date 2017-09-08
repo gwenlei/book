@@ -222,3 +222,206 @@ systemvm/patches/debian/config/opt/cloud/bin/patchsystemvm.sh:   echo "cloud clo
 
 cp /usr/share/virtualbox/VBoxGuestAdditions.iso /home/sysvm/apache-cloudstack-4.5.1-src/tools/appliance/iso/VBoxGuestAdditions_5.1.4.iso
 
+
+++ sed -i 's/removePassword(clientAddress)/#removePassword(clientAddress)/g' /opt/cloudstack-4.5-e731c70/systemvm/patches/debian/config/opt/cloud/bin/passwd_server_ip.py
+
+代码是从网上下载到虚拟机，修改脚本要用命令修改或者直接下载
+/home/sysvm/apache-cloudstack-4.5.1-src/tools/appliance/definitions/systemvm64template/postinstall.sh
+configure_services() {
+...
+  wget --no-check-certificate $snapshot_url -O cloudstack.tar.gz
+  tar -zxvf cloudstack.tar.gz --wildcards cloudstack*/systemvm
+  sed -i "s/removePassword(clientAddress)/#removePassword(clientAddress)/g" $snapshot_dir/systemvm/patches/debian/config/opt/cloud/bin/passwd_server_ip.py
+  wget http://192.168.0.82/downloads/ipsectunnel.sh -O $snapshot_dir/systemvm/patches/debian/config/opt/cloud/bin/ipsectunnel.sh
+  chmod 777 $snapshot_dir/systemvm/patches/debian/config/opt/cloud/bin/ipsectunnel.sh
+
+
+
+
+[root@pc134 bin]# diff ipsectunnel.sh ipsectunnel.sh.bak
+161,175d160
+<     if [ $vpnmodel -eq 1 ]
+<     then
+<         sudo echo "  aggrmode=yes" >> $vpnconffile
+<     fi
+< 
+<     if [ $hflag -eq 1 ]
+<     then
+<         sudo echo "  leftid=$lefthostid" >> $vpnconffile
+<     fi
+< 
+<     if [ $Hflag -eq 1 ]
+<     then
+<         sudo echo "  rightid=$righthostid" >> $vpnconffile
+<     fi
+< 
+235,237d219
+< Mflag=0
+< hflag=0
+< Hflag=0
+239c221
+< while getopts 'ADSpcl:M:h:H:n:g:r:N:e:i:t:T:s:d:' OPTION
+---
+> while getopts 'ADSpcl:n:g:r:N:e:i:t:T:s:d:' OPTION
+242,250d223
+<   M)    Mflag=1
+<         vpnmodel="$OPTARG"
+<         ;;
+<   h)    hflag=1
+<         lefthostid="$OPTARG"
+<         ;;
+<   H)    Hflag=1
+<         righthostid="$OPTARG"
+<         ;;
+
+
+    mount -o loop systemvm.iso /mnt/test
+    mkdir /home/systemvmiso
+    cp /mnt/test/* /home/systemvmiso
+    mkdir /home/systemvmscript
+    cp /mnt/test/cloud-scripts.tgz /home/systemvmscript
+    cd /home/systemvmscript
+    tar xvf cloud-scripts.tgz
+    ###
+    修改相应的脚本例子
+    sed -i
+    "s/removePassword(clientAddress)/#removePassword(clientAddress)/g"
+    /home/systemvmscript/opt/cloud/bin/passwd_server_ip.py
+    ###
+    tar cvf cloud-scripts.tar *
+    gzip -c cloud-scripts.tar > cloud-scripts.tgz
+    mv -f cloud-scripts.tgz /home/systemvmiso/
+    mkisofs -o systemvm.iso /home/systemvmiso/*
+    scp systemvm.iso root@cloudstackmanagement:/usr/share/cloudstack-common/vms
+    scp systemvm.iso root@cloudstackagent:/usr/share/cloudstack-common/vms
+
+在XenServer主机的/opt/xensource/packages/iso下有个systemvm.iso文件，这个文件应该是由 CloudStack从管理机复制过来的，在CloudStack的管理机上的/usr/share/cloudstack-common/vms目录下 有该文件，可能是由于XenServer主机多次重复使用，没有重新安装，造成了这个文件没有正确复制。 解决： 1.进入XenServer主机 2.执行xe host-param-clear param-name=tags uuid=<uuid of the XS host> 3.重启CloudStack 4.销毁ssvm
+
+##20170426 bundle迷之失踪，重装
+```
+cd /home/sysvm/apache-cloudstack-4.5.1-src/tools/appliance
+gem install bundler 
+gem install bundle 
+sh build.sh systemvm64template
+
+##网站源码迷之失踪，修改脚本下载本地源码。
+/home/sysvm/apache-cloudstack-4.5.1-src/tools/appliance/definitions/systemvm64template/postinstall.sh
+/home/sysvm/apache-cloudstack-4.5.1-src/systemvm/patches/debian/config/opt/cloud/bin/passwd_server_ip.py
+
+ln -s /home/sysvm/apache-cloudstack-4.5.1-src.tar /home/html
+gzip apache-cloudstack-4.5.1-src.tar
+wget http://192.168.0.82/apache-cloudstack-4.5.1-src.tar
+
+wget --no-check-certificate http://192.168.0.82/apache-cloudstack-4.5.1-src.tar.gz -O cloudstack.tar.gz
+
+++ mkdir -p /root/.ssh
+++ mkdir -p /var/lib/haproxy
+++ snapshot_url='https://git-wip-us.apache.org/repos/asf?p=cloudstack.git;a=snapshot;h=refs/heads/4.5;sf=tgz'
+++ snapshot_dir='/opt/cloudstack*'
+++ cd /opt
+++ wget --no-check-certificate 'https://git-wip-us.apache.org/repos/asf?p=cloudstack.git;a=snapshot;h=refs/heads/4.5;sf=tgz' -O cloudstack.tar.gz
+--2017-04-26 02:32:52--  https://git-wip-us.apache.org/repos/asf?p=cloudstack.git;a=snapshot;h=refs/heads/4.5;sf=tgz
+Resolving git-wip-us.apache.org (git-wip-us.apache.org)... 140.211.11.23
+Connecting to git-wip-us.apache.org (git-wip-us.apache.org)|140.211.11.23|:443... connected.
+HTTP request sent, awaiting response... 404 Not Found
+2017-04-26 02:32:57 ERROR 404: Not Found.
+
+
+
+wget --no-check-certificate 'https://git-wip-us.apache.org/repos/asf?p=cloudstack.git;a=snapshot;h=refs/heads/4.5;sf=tgz' -O cloudstack.tar.gz
+
+https://github.com/apache/cloudstack.git
+
+wget --no-check-certificate 'https://github.com/apache/cloudstack.git;a=snapshot;h=refs/heads/4.5;sf=tgz' -O cloudstack.tar.gz
+
+```
+  ##snapshot_url="https://git-wip-us.apache.org/repos/asf?p=cloudstack.git;a=snapshot;h=refs/heads/4.5;sf=tgz"
+  ##snapshot_dir="/opt/cloudstack*"
+  ##cd /opt
+  ##wget --no-check-certificate $snapshot_url -O cloudstack.tar.gz
+  ##tar -zxvf cloudstack.tar.gz --wildcards cloudstack*/systemvm
+
+
+  snapshot_url="http://192.168.0.82/apache-cloudstack-4.5.1-src.tar.gz"
+  snapshot_dir="/opt/apache-cloudstack*"
+  cd /opt
+  wget --no-check-certificate $snapshot_url -O cloudstack.tar.gz
+  tar -zxvf cloudstack.tar.gz --wildcards apache-cloudstack*/systemvm
+```
+
++ vboxmanage sharedfolder remove systemvm64template --name veewee-validation
+VBoxManage: error: The machine 'systemvm64template' is already locked for a session (or being unlocked)
+VBoxManage: error: Details: code VBOX_E_INVALID_OBJECT_STATE (0x80bb0007), component MachineWrap, interface IMachine, callee nsISupports
+VBoxManage: error: Context: "LockMachine(a->session, LockType_Write)" at line 1080 of file VBoxManageMisc.cpp
+
++ vboxmanage clonehd 3c537193-1d14-4f85-9740-7e337e8d8b53 systemvm64template-unknown-vmware.vmdk --format VMDK
+0%...10%...20%...30%...40%...50%...60%...70%...80%...90%...
+Progress state: NS_ERROR_INVALID_ARG
+VBoxManage: error: Failed to clone medium
+VBoxManage: error: Cannot register the hard disk '/home/sysvm/apache-cloudstack-4.5.1-src/tools/appliance/systemvm64template-unknown-vmware.vmdk' {e9c26ec2-b822-4387-bd4d-6edd2c645674} because a hard disk '/home/sysvm/apache-cloudstack-4.5.1-src/tools/appliance/systemvm64template-unknown-vmware.vmdk' with UUID {58b2ecd3-163a-48d6-9ad7-5cf2603c8179} already exists
+VBoxManage: error: Details: code NS_ERROR_INVALID_ARG (0x80070057), component VirtualBoxWrap, interface IVirtualBox
+VBoxManage: error: Context: "RTEXITCODE handleCloneMedium(HandlerArg*)" at line 928 of file VBoxManageDisk.cpp
+
+```
+
+
+select max(id) from cloud.vm_template where type = 'SYSTEM' and hypervisor_type = 'XenServer' and removed is null;
+
+
+#在线更新systemvm template
+## 1.systemvm模板放在内网http://192.168.215.15/uploads/iaastest20160819/systemvm64template-4.5-xen-20170426.vhd.bz2
+## 2.登陆cloudstack-management后台执行以下命令
+```
+service cloudstack-management stop
+mount /mnt <二级存储的nfsip:dir>
+/usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /mnt -u http://192.168.215.15/uploads/iaastest20160819/systemvm64template-4.5-xen-20170426.vhd.bz2 -h xenserver -F
+service cloudstack-management start
+umount /mnt
+```
+## 3.登陆cloudstack页面删除二级存储系统虚拟机，等待新的二级存储系统虚拟机自动创建。
+## 4.创建新的网络，新的实例，检查重置密码功能是否正常使用，用户修改密码重启能用自己设置的密码正常登陆。
+## 5.更新前已存在的网络VR，手工更新脚本，页面重启VR，再重启实例。
+```
+ssh -i ~/.ssh/id_rsa.cloud -p3922 <VR的ip:169.254.x.x>
+sed -i "s/#removePassword(clientAddress)/removePassword(clientAddress)/g" /opt/cloud/bin/passwd_server_ip.py
+```
+## 6.手工修改数据库触发自动更新缓存
+参考网站http://cloud.kelceydamage.com/cloudfire/blog/2013/10/08/conquering-the-cloudstack-4-2-dragon-kvm/
+https://wenku.baidu.com/view/c8d882da6294dd88d0d26b39.html
+
+
+UPDATE template_store_ref SET install_path='更新后的路径' WHERE template_id='3';
+
+UPDATE template_spool_ref SET download_pct='0',download_state='NOT_DOWNLOADED',state='NULL',local_path='NULL',install_path='NULL',template_size='0' WHERE template_id='3';
+service cloudstack-management restart
+
+##更新systemvm.iso
+```
+mount -o loop /home/code/book/sysvm/0503iso/systemvm.iso /mnt
+mkdir /home/code/book/sysvm/systemvmiso0511
+cp /mnt/* /home/code/book/sysvm/systemvmiso0511
+mkdir /home/code/book/sysvm/systemvmscript0511
+cp /mnt/cloud-scripts.tgz /home/code/book/sysvm/systemvmscript0511
+cd /home/code/book/sysvm/systemvmscript0511
+tar xvf cloud-scripts.tgz
+sed -i "s/#removePassword(clientAddress)/removePassword(clientAddress)/g" /home/code/book/sysvm/systemvmscript0511/opt/cloud/bin/passwd_server_ip.py
+rm -f cloud-scripts.tgz
+tar cvf cloud-scripts.tar *
+gzip -c cloud-scripts.tar > cloud-scripts.tgz
+mv -f cloud-scripts.tgz /home/code/book/sysvm/systemvmiso0511/
+mkdir /home/code/book/sysvm/newiso0511
+mkisofs -o /home/code/book/sysvm/newiso0511/systemvm.iso /home/code/book/sysvm/systemvmiso0511/*
+scp systemvm.iso root@10.1.6.30:/usr/share/cloudstack-common/vms
+scp systemvm.iso root@10.1.6.20:/usr/share/cloudstack-common/vms
+umount /mnt
+```
+在XenServer主机的/opt/xensource/packages/iso下有个systemvm.iso文件，这个文件应该是由 CloudStack从管理机复制过来的，在CloudStack的管理机上的/usr/share/cloudstack-common/vms目录下 有该文件，可能是由于XenServer主机多次重复使用，没有重新安装，造成了这个文件没有正确复制。 解决： 1.进入XenServer主机 2.执行xe host-param-clear param-name=tags uuid=<uuid of the XS host> 3.重启CloudStack 4.销毁ssvm
+
+
+
+
+
+##vmware
+系统虚拟机中jar包位置
+/usr/local/cloud/systemvm
+cloud-plugin-hypervisor-vmware-4.5.1.jar vmware-vim25-5.1.jar cloud-vmware-base-4.5.1.jar
