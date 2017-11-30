@@ -1,5 +1,139 @@
+sed -i "s/10.1.6.203/172.28.101.203/g" /etc/sysconfig/network-scripts/ifcfg-ens3
+sed -i "s/10.1.6.203/172.28.101.203/g" /var/lib/tftpboot/pxelinux.cfg/default
+sed -i "s/10.1.6.203/172.28.101.203/g" /var/www/html/answerfile65.xml
+sed -i "s/10.1.6.203/172.28.101.203/g" /var/www/html/xs65ps.sh
+sed -i "s#10.1.6.0/24#172.28.101.0/24#g" /etc/dhcp/dhcpd.conf
+
+cd /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy/html
+sed -i "s/10.1.6.203/172.28.101.203/g" xs_patcher/patches/creedence
+sed -i "s/10.1.6.203/172.28.101.203/g" xen-script/auto-deploy.sh
+tar cvf all.tar xen-script xs_patcher
+tar cvf local.tar local
+scp local.tar all.tar xs65ps.sh root@172.28.101.203:/var/www/html
+scp /home/img/testvm/testvm.qcow2 root@192.168.10.123:/home/clouder/img/xspxe/testvmpxe4.qcow2
+
+xe network-param-set name-label="testlabel" uuid=57caa1c8-ab37-7369-844a-7fb1f5e56616
+网络标签不能重复cloudbr0 bond后要修改标签
+
+xe pif-reconfigure-ip uuid=7ccfdf42-339b-ad44-4058-5ee0b8430244 mode=static IP=172.28.101.11 netmask=255.255.255.0 gateway=172.28.101.1
+xe host-set-hostname-live host-uuid=41c11c35-5a7e-45e3-a5f7-9089a18e6996 host-name=xenserver-host11
+xe host-param-set name-label=xenserver-host11 uuid=41c11c35-5a7e-45e3-a5f7-9089a18e6996
+
+Password has been reset to kH9ism
+
+python -mSimpleHTTPServer 80
+http://192.168.173.101/file/centos72.vhd
+http://192.168.173.82/index/xenservertemplate/centos72.vhd
+cloudmonkey register template hypervisor=XenServer zoneid=9abe5610-e9e2-41d7-9523-5869f88070e6 format=vhd name=centos7 displaytext=test1 ispublic=true ostypeid=f0d26901-a57b-11e6-bae0-6ed00c427d9f url=http://192.168.173.101/centos72.vhd passwordenabled=true
+
+git clone https://github.com/lzh9102/python-file-server.git
+nohup /home/local/python-file-server/hfs.py -p 80 /home/local/python-file-server/*.vhd >/home/local/python-file-server/log 2>&1 &
+
+virsh autostart --disable TestServer
+
+xe bond-create network-uuid=<network_uuid> pif-uuids=<pif_uuid_1,pif_uuid_2,...>
+
+bash shell变量不能有减号，只能用下划线
+
+scp -r /var/lib/tftpboot root@10.1.6.1:/home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy
+scp -r /var/www/html root@10.1.6.1:/home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy
+
+scp -r /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy/tftpboot/* root@10.1.6.203:/var/lib/tftpboot 
+scp -r /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy/html/* root@10.1.6.203:/var/www/html
+
+scp -r /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy/html/xs_patcher/xs_patcher.sh root@10.1.6.203:/var/www/html/xs_patcher
+scp -r /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy/html/xen-script/* root@10.1.6.203:/var/www/html/xen-script
+
+tar cvf all.tar  xs_patcher xen-script
+tar cvf local.tar  local
+scp /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy/html/all.tar root@10.1.6.203:/var/www/html
+scp /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy/html/local.tar root@10.1.6.203:/var/www/html
+scp /home/clouder/Cloudstack_Xenserver_auto_deploy/script-and-template/cent71-csmanager-custom-xentool.xva root@10.1.6.203:/var/www/html
+
+scp /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy/html/xs65ps.sh root@10.1.6.203:/var/www/html/
+scp /home/img/testvm/testvm.qcow2 root@192.168.10.123:/home/clouder/img/xspxe/testvmpxe4.qcow2
+
+在创建zone时勾选”use local storage”；全局设置中将“system.vm.use.local.storage”置为true；创建允许使用本地存储的Service Offering。
+UPDATE cloud.configuration SET value='192.168.173.0/24' WHERE name='management.network.cidr';
+UPDATE cloud.configuration SET value='192.168.173.101' WHERE name='host';
+UPDATE cloud.configuration SET value='192.168.173.0/24' WHERE name='secstorage.allowed.internal.sites';
+
+
+mysql -ucloud -pengine -e "use cloud; update configuration set value='$IP' where name='host' and component='ApiServiceConfiguration';"
+
+cloudmonkey list serviceofferings filter=id|grep id| awk -F ' = ' {'print $2'}
+
+
+for i in $(cloudmonkey list serviceofferings filter=id|grep id| awk -F ' = ' {'print $2'})
+do
+cloudmonkey delete serviceoffering id=$i
+done
+
+http://192.168.173.82/index/xenservertemplate/Centos64_aug19.vhd
+Password of new VM Centos64 is  nJ6sgb
+Password of new VM c1c512m is  uJ9kya
+
+[root@cs-mgr ~]# cat update-db.sh 
+#!/bin/bash
+
+IP=`ifconfig |grep -w "inet"|grep -v "127.0.0.1"|awk '{print $2}'`
+
+sed -i 's/cluster.node.IP=\(.*\)'/cluster.node.IP=$IP/ /etc/cloudstack/management/db.properties
+
+
+mysql -ucloud -pengine -e "use cloud; update configuration set value='$IP' where name='host' and component='ApiServiceConfiguration';"
+mysql -ucloud -pengine -e "use cloud; select * from configuration where name='host' and component='ApiServiceConfiguration';"
+
+
+systemctl stop firewalld.service
+systemctl disable firewalld.service
+systemctl enable cloudstack-management
+systemctl start cloudstack-management
+
+默认network_backend: openvswitch,简单网络时设置xenserver使用bridge
+xe host-list params=software-version
+xe-switch-network-backend bridge
+
 dd if=/home/html/iso/XenServer-7.0.0-main.iso of=/dev/sdb bs=1M
 dd if=/home/html/iso/CentOS-7-x86_64-Minimal-1611.iso of=/dev/sdb bs=1M
+
+qemu-img convert -O vmdk /home/img/testvm/testvm.qcow2 /home/img/testvm/testvmpxe.vmdk
+scp /home/img/testvm/testvm.qcow2 root@192.168.10.123:/home/clouder/img/xspxe/testvmpxe.qcow2
+
+ip a add 192.168.1.195-196-194/24
+route add -net 172.28.96.0/19 gw 192.168.1.147
+
+ip a add 192.168.1.194/24 dev ens3
+ip route del default via 192.168.173.1
+ip route add default via 192.168.1.1 dev ens3
+ip route add  172.28.96.0/19 via 192.168.1.147 dev ens3
+
+vhd-util scan -f -m "VHD-*" -l VG_XenStorage-<UUID_of_StorageRepository> -p
+
+for i in `vgs --noheadings -o vg_name`; do vhd-util scan -p -l $i -f 'VHD-*' ; done
+
+for i in `lvs| awk -F ' ' {'print $1'}|sed -e "s/VHD-//g"`; do xe vdi-list uuid=$i; done
+
+lvs
+
+ls -l /dev/mapper
+xentop
+iostat
+vhd-util scan -f -m "VHD-*" -l VG_XenStorage--fd7eedd2--035e--c27d--35a9--f19289f50e39-MGT -p
+cat /sys/block/tdd/dev
+tap-ctl list -m 3
+xe vdi-list uuid=bba407f7-c916-4c47-9c42-26acb0b827f0
+xe vdi-list
+
+xe host-call-plugin host-uuid=40e317bc-18eb-4c81-a383-28733a2c5de6 \
+plugin=coalesce-leaf fn=leaf-coalesce args:vm_uuid=9bad4022-2c2d-dee6-abf5-1b6195b1dad5
+
+
+ python /opt/xensource/sm/cleanup.py -u <SR_UUID> -g -f
+
+xe diagnostic-vdi-status
+
+先禁用virt-manager内部虚拟网桥，再连接外部同网段的虚拟机
 
 #安装cobbler
 yum install -y epel-release
@@ -33,6 +167,7 @@ yum install -y dhcp
 systemctl enable dhcpd.service
 systemctl restart dhcpd.service
 
+yum install -y ansible httpd
 
 配置 TFTP 服务器:
 1. 在 /var/lib/tftpboot 目录中,创建一个名为 xenserver 的新目录。
@@ -46,6 +181,7 @@ mboot.c32 和 pxelinux.0 文件。
 5. 在 pxelinux.cfg 目录中,创建名为 default 的新配置文件。
 
 
+scp menu.c32 root@10.1.6.203:/var/lib/tftpboot
 
 
 answerfile.xml为
@@ -60,7 +196,24 @@ answerfile.xml为
 <timezone>Asia/Shanghai</timezone>
 </installation>
 
+
+<?xml version="1.0"?>
+<installation srtype="ext">
+<primary-disk>sda</primary-disk>
+<guest-disk>sdb</guest-disk>
+<guest-disk>sdc</guest-disk>
+<keymap>us</keymap>
+<root-password>mypassword</root-password>
+<source type="url">http://pxehost.example.com/XenServer/</source>
+<post-install-script type="url">
+http://pxehost.example.com/myscripts/post-install-script
+</post-install-script>
+<admin-interface name="eth0" proto="dhcp" />
+<timezone>Europe/London</timezone>
+</installation>
+
 ##修改install.img
+cd /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy
 mount /home/html/iso/XenServer-6.5.0-xenserver.org-install-cd.iso /mnt
 mkdir tmp
 cp /mnt/install.img tmp
@@ -74,6 +227,35 @@ gzip install
 mv install.gz install.img
 scp install.img root@10.1.6.203:/var/lib/tftpboot/xenserver
 scp install.img root@10.1.6.203:/var/www/html/xs65
+####
+mkdir -p /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy/tmp
+cp /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy/html/xs65/install.img.bak /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy/tmp/install.img
+cd /home/clouder/Cloudstack_Xenserver_auto_deploy/localdeploy/tmp
+mv install.img install.gz
+gunzip install.gz 
+cpio -ivcdu < install
+sed -i "s/root_size = 4096/root_size = 51200/g" ./opt/xensource/installer/constants.py
+rm -f install
+find ./ ! -name install |cpio -ocvB > install
+gzip install
+mv install.gz install.img
+scp install.img root@10.1.6.203:/var/lib/tftpboot/xenserver
+scp install.img root@10.1.6.203:/var/www/html/xs65
+
+
+You can enable multipath using Xen center or by using Xen CLI (xe). Following steps list out the procedure using Xen CLI (xe):
+
+    Enter maintenance mode: xe host-disable uuid=<host UUID>
+    Enable multipath: xe host-param-set other-config:multipathing=true uuid=host_uuid
+##    xe host-param-set other-config: multipathhandle=dmp uuid=host_uuid
+    Release maintenance mode: # xe host-enable uuid=<host UUID>
+
+
+xe pool-param-list uuid=0c9c20cc-6895-86c1-6039-32e91046813a
+xe pool-param-set name-label="newpool" uuid=0c9c20cc-6895-86c1-6039-32e91046813a
+
+xe pool-join master-address=192.168.173.107 master-password=engine master-username=root
+
 #自动安装xenserver
 vim /etc/cobbler/distro_signatures.json
 vim /var/lib/cobbler/distro_signatures.json
@@ -276,3 +458,6 @@ uuid ( RO)                                 : 760a1e5e-c439-42f9-bf5a-480e2bb2b95
                        local-cache-sr ( RO): 4f26ff1b-e1f0-9670-8664-7eb085693617
                                  tags (SRW): 
                    guest_VCPUs_params (MRW): 
+
+
+cloudmonkey register template hypervisor=XenServer zoneid=9abe5610-e9e2-41d7-9523-5869f88070e6 format=vhd name=centos7 displaytext=test1 ispublic=true ostypeid=f0d26901-a57b-11e6-bae0-6ed00c427d9f url=http://192.168.173.82/index/xenservertemplate/centos72.vhd passwordenabled=true
