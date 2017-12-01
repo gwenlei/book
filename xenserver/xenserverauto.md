@@ -181,6 +181,48 @@ mboot.c32 和 pxelinux.0 文件。
 5. 在 pxelinux.cfg 目录中,创建名为 default 的新配置文件。
 
 
+mount XenServer-6.5.0-xenserver.org-install-cd.iso /mnt
+cp -r /mnt /var/www/html/xs65
+mkdir /var/lib/tftpboot/xenserver
+cp /mnt/boot/pxelinux/* /var/lib/tftpboot
+cp /mnt/boot/vmlinuz /var/lib/tftpboot/xenserver
+cp /mnt/boot/xen.gz /var/lib/tftpboot/xenserver
+cp /mnt/boot/install.img /var/lib/tftpboot/xenserver
+mkdir /var/lib/tftpboot/pxelinux.cfg
+cat << EOF > /var/lib/tftpboot/pxelinux.cfg/default
+default menu.c32
+prompt 10
+timeout 60
+
+label xenserver-auto
+kernel mboot.c32
+append xenserver/xen.gz dom0_max_vcpus=1-2 dom0_mem=752M,max:752M com1=115200,8n1 console=com1,vga --- xenserver/vmlinuz xencons=hvc console=hvc0 console=tty0 answerfile=http://172.28.101.203/answerfile65.xml install --- xenserver/install.img
+
+label xenserver-manual
+kernel mboot.c32
+append xenserver/xen.gz dom0_max_vcpus=1-2 dom0_mem=752M,max:752M com1=115200,8n1 console=com1,vga --- xenserver/vmlinuz xencons=hvc console=hvc0 console=tty0 install --- xenserver/install.img
+
+label local
+LOCALBOOT -1
+
+EOF
+
+cat << EOF > /var/www/html/answerfile65.xml
+<?xml version="1.0"?>
+<installation srtype="ext">
+<primary-disk>sdb</primary-disk>
+<guest-disk>sda</guest-disk>
+<guest-disk>sdc</guest-disk>
+<keymap>us</keymap>
+<root-password>engine</root-password>
+<source type="url">http://172.28.101.203/xs65</source>
+<script stage="filesystem-populated" type="url">http://172.28.101.203/xs65ps.sh</script>
+<admin-interface name="eth0" proto="dhcp"/>
+<timezone>Asia/Shanghai</timezone>
+</installation>
+
+EOF
+
 scp menu.c32 root@10.1.6.203:/var/lib/tftpboot
 
 
